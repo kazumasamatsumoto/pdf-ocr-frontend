@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
@@ -19,11 +19,11 @@ export default function Home() {
     const fetchOcrResults = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "ocr-result"));
-        const results = querySnapshot.docs.map(doc => ({
+        const results = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         })) as OcrResult[];
-        
+
         // Sort by timestamp in descending order
         results.sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds);
         setOcrResults(results);
@@ -51,7 +51,7 @@ export default function Home() {
         <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-8 text-center">
           OCR Results
         </h1>
-        
+
         {ocrResults.length === 0 ? (
           <div className="text-center text-gray-600 dark:text-gray-400">
             No OCR results found.
@@ -80,7 +80,9 @@ export default function Home() {
                 </div>
                 <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700">
                   <button
-                    onClick={() => window.open(`/result/${result.id}`, '_blank')}
+                    onClick={() =>
+                      window.open(`/result/${result.id}`, "_blank")
+                    }
                     className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm transition-colors duration-200"
                   >
                     View Details →
