@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../src/firebase/config";
+import Link from "next/link";
 
 interface OcrResult {
   id: string;
@@ -39,56 +40,65 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-8">
+    <div className="min-h-screen bg-black p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-8 text-center">
+        <h1 className="text-5xl font-bold text-white mb-12 text-center bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent">
           OCR Results
         </h1>
 
         {ocrResults.length === 0 ? (
-          <div className="text-center text-gray-600 dark:text-gray-400">
+          <div className="text-center text-gray-400">
             No OCR results found.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {ocrResults.map((result) => (
-              <div
+              <Link
                 key={result.id}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                href={`/result/${result.id}`}
+                className="group bg-gray-900 rounded-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-red-600/20"
               >
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-800 dark:text-white truncate">
+                    <h2 className="text-xl font-semibold text-white truncate group-hover:text-red-500 transition-colors">
                       {result.fileName}
                     </h2>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-gray-400">
                       {result.timestamp?.toDate?.().toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="prose dark:prose-invert max-w-none">
-                    <p className="text-gray-600 dark:text-gray-300 line-clamp-3">
+                  <div className="prose prose-invert max-w-none">
+                    <p className="text-gray-300 line-clamp-3">
                       {result.text}
                     </p>
                   </div>
                 </div>
-                <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700">
-                  <button
-                    onClick={() =>
-                      window.open(`/result/${result.id}`, "_blank")
-                    }
-                    className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm transition-colors duration-200"
-                  >
-                    View Details →
-                  </button>
+                <div className="px-6 py-4 bg-gray-800 group-hover:bg-gray-700 transition-colors">
+                  <span className="text-red-500 group-hover:text-red-400 font-medium text-sm flex items-center">
+                    View Details
+                    <svg
+                      className="w-4 h-4 ml-2 transform transition-transform group-hover:translate-x-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
