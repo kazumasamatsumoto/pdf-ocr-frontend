@@ -17,8 +17,9 @@ interface OcrResult {
   facilityName: string;
   date: string;
   createdAt: {
-    _seconds: number;
-    _nanoseconds: number;
+    seconds: number;
+    nanoseconds: number;
+    toDate: () => Date;
   };
 }
 
@@ -91,7 +92,17 @@ export default function ResultPage({
           </button>
           <h1 className="text-4xl font-bold mb-2">{ocrResult.fileName}</h1>
           <p className="text-gray-400">
-            {new Date(ocrResult.createdAt._seconds * 1000).toLocaleString()}
+            {new Date(ocrResult.createdAt.seconds * 1000).toLocaleString(
+              "ja-JP",
+              {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              }
+            )}
           </p>
         </div>
 
@@ -113,8 +124,21 @@ export default function ResultPage({
                   <p className="text-white">{ocrResult.facilityName}</p>
                 </div>
                 <div>
-                  <h3 className="text-gray-400">Date</h3>
-                  <p className="text-white">{ocrResult.date}</p>
+                  <h3 className="text-gray-400">Created At</h3>
+                  <p className="text-white">
+                    {ocrResult.createdAt
+                      ? new Date(
+                          ocrResult.createdAt.seconds * 1000
+                        ).toLocaleString("ja-JP", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        })
+                      : "-"}
+                  </p>
                 </div>
               </div>
               <div className="mt-6">

@@ -8,7 +8,7 @@ import Link from "next/link";
 interface OcrResult {
   id: string;
   text: string;
-  timestamp: any;
+  createdAt: any;
   fileName: string;
 }
 
@@ -17,18 +17,26 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredResults, setFilteredResults] = useState<OcrResult[]>([]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     const fetchOcrResults = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "ocr-result"));
-        const results = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as OcrResult[];
+        const results = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+          };
+        }) as OcrResult[];
 
-        // Sort by timestamp in descending order
-        results.sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds);
+        // Sort by createdAt
+        results.sort((a, b) => 
+          sortOrder === 'desc' 
+            ? b.createdAt?.seconds - a.createdAt?.seconds
+            : a.createdAt?.seconds - b.createdAt?.seconds
+        );
         setOcrResults(results);
       } catch (error) {
         console.error("Error fetching OCR results:", error);
@@ -64,7 +72,7 @@ export default function Home() {
               onChange={(e) => {
                 const query = e.target.value;
                 setSearchQuery(query);
-                const filtered = ocrResults.filter(result =>
+                const filtered = ocrResults.filter((result) =>
                   result.fileName.toLowerCase().includes(query.toLowerCase())
                 );
                 setFilteredResults(filtered);
@@ -72,26 +80,76 @@ export default function Home() {
               className="w-full px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
           </div>
         </div>
 
         {(searchQuery ? filteredResults : ocrResults).length === 0 ? (
-          <div className="text-center text-gray-400">
-            No OCR results found.
-          </div>
+          <div className="text-center text-gray-400">No OCR results found.</div>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-gray-800">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-900">
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-red-500">File Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-red-500">Content Preview</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-red-500">Date</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-red-500">Action</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-red-500">
+                    File Name
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-red-500">
+                    <button 
+                      onClick={() => {
+                        const newOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+                        setSortOrder(newOrder);
+                        const sorted = [...ocrResults].sort((a, b) => 
+                          newOrder === 'desc'
+                            ? b.createdAt?.seconds - a.createdAt?.seconds
+                            : a.createdAt?.seconds - b.createdAt?.seconds
+                        );
+                        setOcrResults(sorted);
+                        if (searchQuery) {
+                          const filteredSorted = [...filteredResults].sort((a, b) => 
+                            newOrder === 'desc'
+                              ? b.createdAt?.seconds - a.createdAt?.seconds
+                              : a.createdAt?.seconds - b.createdAt?.seconds
+                          );
+                          setFilteredResults(filteredSorted);
+                        }
+                      }}
+                      className="flex items-center space-x-1 hover:text-red-400 transition-colors"
+                    >
+                      <span>Date</span>
+                      <svg
+                        className={`w-4 h-4 transition-transform ${
+                          sortOrder === 'desc' ? 'transform rotate-180' : ''
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 15l7-7 7 7"
+                        />
+                      </svg>
+                    </button>
+                  </th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-red-500">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
@@ -106,13 +164,17 @@ export default function Home() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-gray-300 line-clamp-2 max-w-xl">
-                        {result.text}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
                       <div className="text-gray-400">
-                        {result.timestamp?.toDate?.().toLocaleDateString()}
+                        {result.createdAt?.toDate
+                          ? result.createdAt.toDate().toLocaleString("ja-JP", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })
+                          : "-"}
                       </div>
                     </td>
                     <td className="px-6 py-4">
